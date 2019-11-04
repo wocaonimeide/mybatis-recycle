@@ -607,10 +607,10 @@ public class Configuration {
     if (proxyMap.get(resultSetHandler) != null) {
       return (ResultSetHandler) proxyMap.get(resultSetHandler);
     }else {
-      ResultSetHandler oldHandler=resultSetHandler;
+      ResultSetHandler oldResultSetHandler=resultSetHandler;
       resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
-      if (oldHandler!=resultSetHandler){
-        proxyMap.put(oldHandler,resultSetHandler);
+      if (oldResultSetHandler!=resultSetHandler){
+        proxyMap.put(oldResultSetHandler,resultSetHandler);
       }else {
         notHaveProxyClass.add(ResultSetHandler.class);
       }
