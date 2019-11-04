@@ -43,7 +43,7 @@ public class SqlSourceBuilder extends BaseBuilder {
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
     String sql = parser.parse(originalSql);
-    return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
+    return StaticSqlSource.newInstance(configuration, sql, handler.getParameterMappings());
   }
 
   private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {

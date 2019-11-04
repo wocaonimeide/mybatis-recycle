@@ -15,6 +15,8 @@
  */
 package org.apache.ibatis.mapping;
 
+import io.netty.util.Recycler;
+import org.apache.ibatis.recyle.Recyle;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 import org.apache.ibatis.session.Configuration;
@@ -33,13 +35,39 @@ import java.util.Map;
  *
  * @author Clinton Begin
  */
-public class BoundSql {
+public class BoundSql implements Recyle {
 
-  private final String sql;
-  private final List<ParameterMapping> parameterMappings;
-  private final Object parameterObject;
-  private final Map<String, Object> additionalParameters;
-  private final MetaObject metaParameters;
+  private static final Recycler<BoundSql> RECYCLER=new Recycler<BoundSql>() {
+    @Override
+    protected BoundSql newObject(Handle<BoundSql> handle) {
+      return new BoundSql(handle);
+    }
+  };
+
+  private Recycler.Handle<BoundSql> handle;
+  private String sql;
+  private List<ParameterMapping> parameterMappings;
+  private Object parameterObject;
+  private Map<String, Object> additionalParameters;
+  private MetaObject metaParameters;
+
+  private BoundSql (Recycler.Handle<BoundSql> boundSqlHandle){
+    this.handle=boundSqlHandle;
+  }
+
+  public static BoundSql newInstance(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject) {
+    BoundSql boundSql=RECYCLER.get();
+    boundSql.initBoundSql(configuration, sql, parameterMappings, parameterObject);
+    return boundSql;
+  }
+
+  private void initBoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject){
+    this.sql = sql;
+    this.parameterMappings = parameterMappings;
+    this.parameterObject = parameterObject;
+    this.additionalParameters = new HashMap<>();
+    this.metaParameters = configuration.newMetaObject(additionalParameters);
+  }
 
   public BoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject) {
     this.sql = sql;
@@ -72,5 +100,10 @@ public class BoundSql {
 
   public Object getAdditionalParameter(String name) {
     return metaParameters.getValue(name);
+  }
+
+  @Override
+  public void recyle() {
+    this.handle.recycle(this);
   }
 }

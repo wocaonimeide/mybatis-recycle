@@ -85,6 +85,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
     this.executor=null;
     this.mappedStatement=null;
     this.rowBounds=null;
+    this.boundSql.recyle();
     this.boundSql=null;
     this.parameterHandler.recyle();
     this.parameterHandler=null;

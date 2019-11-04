@@ -16,6 +16,7 @@
 package org.apache.ibatis.scripting.xmltags;
 
 import org.apache.ibatis.builder.SqlSourceBuilder;
+import org.apache.ibatis.builder.StaticSqlSource;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.Configuration;
@@ -43,6 +44,10 @@ public class DynamicSqlSource implements SqlSource {
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     context.getBindings().forEach(boundSql::setAdditionalParameter);
     context.recycler();
+    if (sqlSource instanceof StaticSqlSource){
+      StaticSqlSource staticSqlSource= (StaticSqlSource) sqlSource;
+      staticSqlSource.recyle();
+    }
     return boundSql;
   }
 }

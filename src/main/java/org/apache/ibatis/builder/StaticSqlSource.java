@@ -45,6 +45,12 @@ public class StaticSqlSource implements SqlSource, Recyle {
     this.handle=handle;
   }
 
+  public static StaticSqlSource newInstance(Configuration configuration, String sql, List<ParameterMapping> parameterMappings) {
+    StaticSqlSource staticSqlSource=RECYCLER.get();
+    staticSqlSource.initSqlSource(configuration, sql,parameterMappings);
+    return staticSqlSource;
+  }
+
   public void initSqlSource(Configuration configuration, String sql) {
     initSqlSource(configuration, sql, null);
   }
@@ -57,7 +63,7 @@ public class StaticSqlSource implements SqlSource, Recyle {
 
   @Override
   public BoundSql getBoundSql(Object parameterObject) {
-    return new BoundSql(configuration, sql, parameterMappings, parameterObject);
+    return BoundSql.newInstance(configuration, sql, parameterMappings, parameterObject);
   }
 
   @Override

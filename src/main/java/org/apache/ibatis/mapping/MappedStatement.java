@@ -297,7 +297,7 @@ public final class MappedStatement {
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings == null || parameterMappings.isEmpty()) {
-      boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
+      boundSql = BoundSql.newInstance(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 
     // check for nested result maps in parameter mappings (issue #30)
