@@ -60,6 +60,18 @@ public class DynamicContext {
     return context;
   }
 
+  public DynamicContext(Configuration configuration, Object parameterObject){
+    if (parameterObject != null && !(parameterObject instanceof Map)) {
+      MetaObject metaObject = configuration.newMetaObject(parameterObject);
+      boolean existsTypeHandler = configuration.getTypeHandlerRegistry().hasTypeHandler(parameterObject.getClass());
+      bindings = ContextMap.newInstance(metaObject, existsTypeHandler);
+    } else {
+      bindings = ContextMap.newInstance(null, false);
+    }
+    bindings.put(PARAMETER_OBJECT_KEY, parameterObject);
+    bindings.put(DATABASE_ID_KEY, configuration.getDatabaseId());
+  }
+
   private void initContext(Configuration configuration, Object parameterObject) {
     if (parameterObject != null && !(parameterObject instanceof Map)) {
       MetaObject metaObject = configuration.newMetaObject(parameterObject);
