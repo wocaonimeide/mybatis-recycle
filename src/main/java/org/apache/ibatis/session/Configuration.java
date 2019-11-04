@@ -639,10 +639,10 @@ public class Configuration {
     if (proxyMap.get(statementHandler) != null) {
       return (StatementHandler) proxyMap.get(statementHandler);
     }else {
-      StatementHandler oldHandler=statementHandler;
+      StatementHandler lodStatementHandler=statementHandler;
       statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
-      if (statementHandler!=oldHandler) {
-        proxyMap.put(oldHandler,statementHandler);
+      if (statementHandler!=lodStatementHandler) {
+        proxyMap.put(lodStatementHandler,statementHandler);
       }else {
         notHaveProxyClass.add(StatementHandler.class);
       }
