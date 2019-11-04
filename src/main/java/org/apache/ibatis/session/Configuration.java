@@ -674,10 +674,10 @@ public class Configuration {
     if (proxyMap.get(executor) != null) {
       return (Executor) proxyMap.get(executor);
     }else {
-      Executor oldExe=executor;
+      Executor oldExecutor=executor;
       executor = (Executor) interceptorChain.pluginAll(executor);
-      if (oldExe!=executor) {
-        proxyMap.put(oldExe,executor);
+      if (oldExecutor!=executor) {
+        proxyMap.put(oldExecutor,executor);
       }else {
         notHaveProxyClass.add(Executor.class);
       }
