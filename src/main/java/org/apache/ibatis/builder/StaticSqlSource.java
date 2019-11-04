@@ -17,25 +17,39 @@ package org.apache.ibatis.builder;
 
 import java.util.List;
 
+import io.netty.util.Recycler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.mapping.SqlSource;
+import org.apache.ibatis.recyle.Recyle;
 import org.apache.ibatis.session.Configuration;
 
 /**
  * @author Clinton Begin
  */
-public class StaticSqlSource implements SqlSource {
+public class StaticSqlSource implements SqlSource, Recyle {
 
-  private final String sql;
-  private final List<ParameterMapping> parameterMappings;
-  private final Configuration configuration;
+  private static final Recycler<StaticSqlSource> RECYCLER=new Recycler<StaticSqlSource>() {
+    @Override
+    protected StaticSqlSource newObject(Handle<StaticSqlSource> handle) {
+      return new StaticSqlSource(handle);
+    }
+  };
 
-  public StaticSqlSource(Configuration configuration, String sql) {
-    this(configuration, sql, null);
+  private Recycler.Handle<StaticSqlSource> handle;
+  private String sql;
+  private List<ParameterMapping> parameterMappings;
+  private Configuration configuration;
+
+  private StaticSqlSource(Recycler.Handle<StaticSqlSource> handle){
+    this.handle=handle;
   }
 
-  public StaticSqlSource(Configuration configuration, String sql, List<ParameterMapping> parameterMappings) {
+  public void initSqlSource(Configuration configuration, String sql) {
+    initSqlSource(configuration, sql, null);
+  }
+
+  public void initSqlSource(Configuration configuration, String sql, List<ParameterMapping> parameterMappings) {
     this.sql = sql;
     this.parameterMappings = parameterMappings;
     this.configuration = configuration;
@@ -46,4 +60,8 @@ public class StaticSqlSource implements SqlSource {
     return new BoundSql(configuration, sql, parameterMappings, parameterObject);
   }
 
+  @Override
+  public void recyle() {
+    handle.recycle(this);
+  }
 }

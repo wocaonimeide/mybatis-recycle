@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import io.netty.util.Recycler;
 import ognl.OgnlContext;
 import ognl.OgnlRuntime;
 import ognl.PropertyAccessor;
@@ -34,21 +35,39 @@ public class DynamicContext {
   public static final String PARAMETER_OBJECT_KEY = "_parameter";
   public static final String DATABASE_ID_KEY = "_databaseId";
 
+  private static final Recycler<DynamicContext> RECYCLER=new Recycler<DynamicContext>() {
+    @Override
+    protected DynamicContext newObject(Handle<DynamicContext> handle) {
+      return new DynamicContext(handle);
+    }
+  };
+
   static {
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
 
-  private final ContextMap bindings;
-  private final StringJoiner sqlBuilder = new StringJoiner(" ");
+  private ContextMap bindings;
+  private StringJoiner sqlBuilder = new StringJoiner(" ");
   private int uniqueNumber = 0;
+  private Recycler.Handle<DynamicContext> handle;
 
-  public DynamicContext(Configuration configuration, Object parameterObject) {
+  private DynamicContext(Recycler.Handle<DynamicContext> handle){
+    this.handle=handle;
+  }
+
+  public static DynamicContext newInstance(Configuration configuration, Object parameterObject) {
+    DynamicContext context=RECYCLER.get();
+    context.initContext(configuration, parameterObject);
+    return context;
+  }
+
+  private void initContext(Configuration configuration, Object parameterObject) {
     if (parameterObject != null && !(parameterObject instanceof Map)) {
       MetaObject metaObject = configuration.newMetaObject(parameterObject);
       boolean existsTypeHandler = configuration.getTypeHandlerRegistry().hasTypeHandler(parameterObject.getClass());
-      bindings = new ContextMap(metaObject, existsTypeHandler);
+      bindings = ContextMap.newInstance(metaObject, existsTypeHandler);
     } else {
-      bindings = new ContextMap(null, false);
+      bindings = ContextMap.newInstance(null, false);
     }
     bindings.put(PARAMETER_OBJECT_KEY, parameterObject);
     bindings.put(DATABASE_ID_KEY, configuration.getDatabaseId());
@@ -76,10 +95,28 @@ public class DynamicContext {
 
   static class ContextMap extends HashMap<String, Object> {
     private static final long serialVersionUID = 2977601501966151582L;
-    private final MetaObject parameterMetaObject;
-    private final boolean fallbackParameterObject;
+    private static final Recycler<ContextMap> RECYCLER=new Recycler<ContextMap>() {
+      @Override
+      protected ContextMap newObject(Handle<ContextMap> handle) {
+        return new ContextMap(handle);
+      }
+    };
+    private MetaObject parameterMetaObject;
+    private boolean fallbackParameterObject;
 
-    public ContextMap(MetaObject parameterMetaObject, boolean fallbackParameterObject) {
+    private Recycler.Handle<ContextMap> handle;
+
+    private ContextMap(Recycler.Handle<ContextMap> handle){
+      this.handle=handle;
+    }
+
+    public static ContextMap newInstance(MetaObject parameterMetaObject, boolean fallbackParameterObject) {
+      ContextMap map=RECYCLER.get();
+      map.initMap(parameterMetaObject,fallbackParameterObject);
+      return map;
+    }
+
+    public void initMap(MetaObject parameterMetaObject, boolean fallbackParameterObject) {
       this.parameterMetaObject = parameterMetaObject;
       this.fallbackParameterObject = fallbackParameterObject;
     }
@@ -101,6 +138,10 @@ public class DynamicContext {
         // issue #61 do not modify the context when reading
         return parameterMetaObject.getValue(strKey);
       }
+    }
+
+    public void recycler(){
+      handle.recycle(this);
     }
   }
 
@@ -138,5 +179,10 @@ public class DynamicContext {
     public String getSourceSetter(OgnlContext arg0, Object arg1, Object arg2) {
       return null;
     }
+  }
+
+  public void recycler(){
+    this.bindings.recycler();
+    handle.recycle(this);
   }
 }
