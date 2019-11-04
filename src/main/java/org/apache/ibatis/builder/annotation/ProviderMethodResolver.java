@@ -16,12 +16,12 @@
 
 package org.apache.ibatis.builder.annotation;
 
+import org.apache.ibatis.builder.BuilderException;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.apache.ibatis.builder.BuilderException;
 
 /**
  * The interface that resolve an SQL provider method via an SQL provider class.

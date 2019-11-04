@@ -16,11 +16,7 @@
 package org.apache.ibatis.type;
 
 import java.io.InputStream;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * The {@link TypeHandler} for {@link Blob}/{@link InputStream} using method supported at JDBC 4.0.

@@ -15,10 +15,6 @@
  */
 package org.apache.ibatis.plugin;
 
-import org.apache.ibatis.executor.Executor;
-import org.apache.ibatis.executor.parameter.ParameterHandler;
-import org.apache.ibatis.executor.resultset.ResultSetHandler;
-import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.recyle.CheckProxyed;
 
 import java.util.ArrayList;
