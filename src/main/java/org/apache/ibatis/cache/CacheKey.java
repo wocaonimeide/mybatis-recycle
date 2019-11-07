@@ -15,6 +15,8 @@
  */
 package org.apache.ibatis.cache;
 
+import io.netty.util.Recycler;
+import org.apache.ibatis.recyle.Recyle;
 import org.apache.ibatis.reflection.ArrayUtil;
 
 import java.io.Serializable;
@@ -25,9 +27,16 @@ import java.util.StringJoiner;
 /**
  * @author Clinton Begin
  */
-public class CacheKey implements Cloneable, Serializable {
+public class CacheKey implements Cloneable, Serializable, Recyle {
 
   private static final long serialVersionUID = 1146682552656046210L;
+
+  private static final Recycler<CacheKey> RECYCLER=new Recycler<CacheKey>() {
+    @Override
+    protected CacheKey newObject(Handle<CacheKey> handle) {
+      return new CacheKey(handle);
+    }
+  };
 
   public static final CacheKey NULL_CACHE_KEY = new CacheKey(){
     @Override
@@ -43,18 +52,38 @@ public class CacheKey implements Cloneable, Serializable {
   private static final int DEFAULT_MULTIPLIER = 37;
   private static final int DEFAULT_HASHCODE = 17;
 
-  private final int multiplier;
+  private int multiplier;
   private int hashcode;
   private long checksum;
   private int count;
   // 8/21/2017 - Sonarlint flags this as needing to be marked transient.  While true if content is not serializable, this is not always true and thus should not be marked transient.
   private List<Object> updateList;
 
+  private Recycler.Handle<CacheKey> cacheKeyHandle;
+
+  private CacheKey(Recycler.Handle<CacheKey> cacheKeyHandle){
+    this.cacheKeyHandle=cacheKeyHandle;
+  }
+
+  public static CacheKey newInstance() {
+    CacheKey cacheKey=RECYCLER.get();
+    return cacheKey;
+  }
+
   public CacheKey() {
     this.hashcode = DEFAULT_HASHCODE;
     this.multiplier = DEFAULT_MULTIPLIER;
     this.count = 0;
     this.updateList = new ArrayList<>();
+  }
+
+  @Override
+  public void recyle() {
+    this.hashcode=DEFAULT_HASHCODE;
+    this.multiplier = DEFAULT_MULTIPLIER;
+    this.count = 0;
+    this.updateList.clear();
+    this.cacheKeyHandle.recycle(this);
   }
 
   public CacheKey(Object[] objects) {
@@ -135,5 +164,4 @@ public class CacheKey implements Cloneable, Serializable {
     clonedCacheKey.updateList = new ArrayList<>(updateList);
     return clonedCacheKey;
   }
-
 }

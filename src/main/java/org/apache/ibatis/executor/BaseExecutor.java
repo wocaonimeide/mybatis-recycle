@@ -201,6 +201,7 @@ public abstract class BaseExecutor implements Executor {
         clearLocalCache();
       }
     }
+    key.recyle();
     return list;
   }
 
@@ -228,7 +229,7 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
-    CacheKey cacheKey = new CacheKey();
+    CacheKey cacheKey = CacheKey.newInstance();
     cacheKey.update(ms.getId());
     cacheKey.update(rowBounds.getOffset());
     cacheKey.update(rowBounds.getLimit());
